@@ -13,3 +13,5 @@ deploy:
   local_dir: dist
   on:
     branch: master
+
+after_deploy: git commit --allow-empty -m "Empty commit to update the gh-pages"
