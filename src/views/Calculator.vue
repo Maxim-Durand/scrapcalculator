@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>
-      This is the first page of our scrap Calculator for Rust.
+      This is the first page of our scrap Calculator for Rust!
     </h1>
   </div>
 </template>
