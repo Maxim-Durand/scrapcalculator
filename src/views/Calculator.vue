@@ -14,8 +14,8 @@
               :style="{ border: collapsed ? '2px solid grey' : '' }"
           >
             <img
-                :src="node.imagePath"
-                style="width: auto; height: auto; border-radius: 10px;"
+                :src="require(`../assets/tier3/${node.imagePath}`)"
+                style="width: 10rem; height: 10rem; border-radius: 10px;"
             />
             <span style="padding: 4px 0; font-weight: bold;"
             >{{ node.name }}</span
@@ -25,19 +25,19 @@
 
       </vue-tree>
     </div>
-
   </div>
+
+
 </template>
 
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import TechTreeComponent from "@/components/TechTreeComponent.vue";
-import VueTree from '@ssthouse/vue-tree-chart'
+import VueTree from '@ssthouse/vue-tree-chart';
 Vue.component('vue-tree', VueTree)
 @Component({
   components: {
-    TechTreeComponent,
+
   },
 })
 export default class Calculator extends Vue {
@@ -47,24 +47,24 @@ export default class Calculator extends Vue {
       tier3:{
         name:'Reinforced Glass Window',
         cost: 1,
-        imagePath:'src/assets/tier3/wall-window-bars-toptier.png',
+        imagePath:'wall-window-bars-toptier.png',
         children:[
           {
             name:'Armored Door',
             cost:1,
-            imagePath:'src/assets/tier3/door.hinged.toptier.png',
+            imagePath:'door.hinged.toptier.png',
             children:[
               {
                 name:'Armored Double Door',
                 cost:1,
-                imagePath:'src/assets/tier3/door.double.hinged.toptier.png',
+                imagePath:'door.double.hinged.toptier.png',
               }
             ]
           },
           {
             name:'MP5A4',
             cost:1,
-            imagePath: "src/assets/tier3/smg.mp5.png",
+            imagePath: "smg.mp5.png",
             children:[
               // TODO Complete with all childrens
             ]
@@ -72,19 +72,19 @@ export default class Calculator extends Vue {
           {
             name: "High Quality Carburetor",
             cost:1,
-            imagePath: "src/assets/tier3/carburetor3.png",
+            imagePath: "carburetor3.png",
             children: [
               {
                 name:"Armored Cockpit Vehicule Module",
                 cost:1,
-                imagePath:"src/assets/tier3/vehicle.1mod.cockpit.armored.png"
+                imagePath:"vehicle.1mod.cockpit.armored.png"
               }
             ]
           },
         ]
       },
       treeConfig:{
-        nodeWidth: 120, nodeHeight: 80, levelHeight: 200
+        nodeWidth: 200, nodeHeight: 80, levelHeight: 200
       }
     }
   }
@@ -93,19 +93,20 @@ export default class Calculator extends Vue {
 </script>
 <style>
 .container{
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .rich-media-node {
-  width: 80px;
+  width: auto;
   padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   color: white;
-  background-color: #f7c616;
+  background-color: #373631;
   border-radius: 4px;
 }
 </style>
