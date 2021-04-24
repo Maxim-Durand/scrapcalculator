@@ -15,11 +15,9 @@
           >
             <img
                 :src="require(`../assets/tier3/${node.imagePath}`)"
-                style="width: 10rem; height: 10rem; border-radius: 10px;"
+                style="width: 5rem; height: 5rem; border-radius: 10px;"
             />
-            <span style="padding: 4px 0; font-weight: bold;"
-            >{{ node.name }}</span
-            >
+            <span style="padding: 4px 0; font-weight: bold;">{{ node.name }}</span>
           </div>
         </template>
 
@@ -92,11 +90,15 @@ export default class Calculator extends Vue {
 }
 </script>
 <style>
+
+.tree-container{
+  height: 100rem;
+}
 .container{
-  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+
 }
 .rich-media-node {
   width: auto;
