@@ -13,7 +13,7 @@
         <template v-slot:node="{ node }">
           <div
               class="rich-media-node"
-              v-on:click="clickOnceOnNode($event,node.cost)"
+              v-on:click="clickOnceOnNode($event,node)"
               style="font-size: 14px;
               font-style: normal;
               border-top-width: var(--border-size);
@@ -44,6 +44,7 @@
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
 import VueTree from '@ssthouse/vue-tree-chart';
+import * as d3 from 'd3'
 
 Vue.component('vue-tree', VueTree)
 
@@ -52,45 +53,47 @@ export default class Calculator extends Vue {
 
   data() {
     return {
+      d3,
       tier3: {
         name: 'Reinforced Glass Window',
-        cost: 1,
+        cost: 125,
         imagePath: 'wall-window-bars-toptier.png',
         children: [
           {
             name: 'Armored Door',
-            cost: 1,
+            cost: 500,
             imagePath: 'door.hinged.toptier.png',
             children: [
               {
                 name: 'Armored Double Door',
-                cost: 1,
+                cost: 500,
                 imagePath: 'door.double.hinged.toptier.png',
               }
             ]
           },
           {
             name: 'MP5A4',
-            cost: 1,
+            cost: 125,
             imagePath: "smg.mp5.png",
             children: [
               {
                 name: "Weapon Lasersight",
                 imagePath: "weapon.mod.lasersight.png",
-                cost: 1,
+                cost: 125,
                 children: [
                   {
                     name: "HV 5.56 Rifle Ammo",
                     imagePath: "ammo.rifle.hv.png",
-                    cost: 1,
+                    cost: 125,
                     children: [
                       {
                         name: "Explosive 5.56 Rifle Ammo",
                         imagePath: "ammo.rifle.explosive.png",
-                        cost: 1,
+                        cost: 125,
                         children: [
                           {
                             name: "Metal Facemask",
+                            cost:500,
                             imagePath: "metal.facemask.png",
                             customID: 6,
                           }
@@ -99,27 +102,28 @@ export default class Calculator extends Vue {
                       {
                         name: "Incendiary 5.56 Rifle Ammo",
                         imagePath: "ammo.rifle.incendiary.png",
-                        cost: 1,
+                        cost: 125,
                         children: [
 
                           {
                             name: "Metal Chest Plate",
                             imagePath: "metal.plate.torso.png",
-                            cost: 1,
+                            cost: 500,
                             children: [
                               {
                                 name: "Assault Rifle",
                                 imagePath: "rifle.ak.png",
-                                cost: 1,
+                                cost: 500,
                                 customID: 7,
                                 children: [
                                   {
                                     name: "Bolt Action Rifle",
                                     imagePath: "rifle.bolt.png",
-                                    cost: 1,
+                                    cost: 500,
                                     children: [
                                       {
                                         name: "x8 Scope",
+                                        cost:125,
                                         imagePath: "weapon.mod.small.scope.png"
                                       }
                                     ]
@@ -131,17 +135,17 @@ export default class Calculator extends Vue {
                           {
                             name: "Explosives",
                             imagePath: "explosives.png",
-                            cost: 1,
+                            cost: 500,
                             children: [
                               {
                                 name: "Timed Explosives",
                                 imagePath: "explosive.timed.png",
-                                cost: 1,
+                                cost: 500,
                                 children: [
                                   {
                                     name: "Rocket",
                                     imagePath: "ammo.rocket.basic.png",
-                                    cost: 1
+                                    cost: 125
                                   }
                                 ]
                               }
@@ -158,36 +162,36 @@ export default class Calculator extends Vue {
           },
           {
             name: "High Quality Carburetor",
-            cost: 1,
+            cost: 20,
             customID: 3,
             imagePath: "carburetor3.png"
           },
           {
             name: "Crankshaft",
-            cost: 1,
+            cost: 20,
             customID: 1,
             imagePath: "crankshaft3.png",
           },
           {
             name: "High quality pistons",
             imagePath: "piston3.png",
-            cost: 1,
+            cost: 20,
             customID: 4
           },
           {
             name: "High Quality Spark Plugs",
             imagePath: "sparkplug3.png",
-            cost: 1,
+            cost: 20,
             children: [
               {
                 name: "Armored Cockpit Vehicule Module",
-                cost: 1,
+                cost: 125,
                 customID: 0,
                 imagePath: "vehicle.1mod.cockpit.armored.png"
               },
               {
                 name: "Armored Passenger Vehicule Module",
-                cost: 1,
+                cost: 125,
                 customID: 0,
                 imagePath: "vehicle.1mod.passengers.armored.png"
               }
@@ -195,7 +199,7 @@ export default class Calculator extends Vue {
           },
           {
             name: "Valve",
-            cost: 1,
+            cost: 20,
             customID: 5,
             imagePath: "valve3.png"
           },
@@ -209,7 +213,7 @@ export default class Calculator extends Vue {
       treeConfig: {
         nodeWidth: window.screen.width / 8, nodeHeight: 80, levelHeight: 200
       },
-      totalCost:0,
+      totalCost: 0,
     }
   }
 
@@ -227,9 +231,50 @@ export default class Calculator extends Vue {
         "              border-bottom-style: solid;"
   }
 
-  clickOnceOnNode(evt,node_cost) {
-    console.log(evt)
+  recursive_find(start_node, end_name) {
+    if (start_node.children) {
+      const found_at_this_height = start_node.children.find(d => {
+        return d.data.name === end_name
+      })
+      if (found_at_this_height) {
+        return found_at_this_height
+      } else {
+        // console.log(`didnt found it at height ${start_node.depth}`)
+        for (const child of start_node.children) {
+          // console.log(child)
+          let found = this.recursive_find(child, end_name)
+          if(found){
+            return found
+          }
+        }
+      }
+    }
+    else{
+      return undefined
+    }
 
+  }
+
+  computeCost(end_node) {
+    let tree = d3.hierarchy(this.$data.tier3)
+    // console.log(tree)
+    // console.log(end_node)
+    let start_node = tree
+    let endNode = this.recursive_find(start_node, end_node.name)
+    // console.log(endNode)
+    let shortest_path = start_node.path(endNode)
+    // console.log(shortest_path)
+    let cost = 0
+    for(const node of shortest_path){
+      cost += node.data.cost
+    }
+    return cost
+  }
+
+  clickOnceOnNode(evt, node) {
+    console.log(evt)
+    console.log(node)
+    const node_cost = node.cost
     let previousStyle = evt.target.parentElement.attributes[1].value
     let style = this.nodeStyle("white")
     if (previousStyle.includes("white")) {
@@ -239,9 +284,10 @@ export default class Calculator extends Vue {
     if (previousStyle.includes("green")) {
       style = this.nodeStyle("transparent")
     }
-    if(style.includes("white")){
+    if (style.includes("white")) {
       // TODO Build the tree search where cost is incremented at every children until you reach this node
-      // this.$data.totalCost += node_cost
+      this.$data.totalCost = this.computeCost(node)
+      console.log(this.$data.totalCost)
     }
     evt.target.parentElement.setAttribute("style", style)
   }
