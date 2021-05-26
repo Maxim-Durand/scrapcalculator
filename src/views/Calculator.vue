@@ -17,10 +17,12 @@
           :collapse-enabled="false"
       >
         <template v-slot:node="{ node }">
-          <div
-              class="rich-media-node"
-              v-on:click="clickOnceOnNode($event,node)"
-              style="font-size: 14px;
+          <div v-on:click="clickOnceOnNode($event,node)"
+               style="border: transparent"
+          >
+            <div
+                class="rich-media-node"
+                style="font-size: 14px;
               font-style: normal;
               border-top-width: var(--border-size);
               border-top-style: solid;
@@ -30,12 +32,17 @@
               border-right-style: solid;
               border-bottom-width: var(--border-size);
               border-bottom-style: solid;"
-          >
-            <img
-                :src="require(`../assets/tier3/${node.imagePath}`)"
-                style="width: 5rem; height: 5rem; border-radius: 10px;"
-            />
-            <span style="padding: 4px 0; font-weight: bold;">{{ node.name }}</span>
+            >
+              <img
+                  :src="require(`../assets/tier3/${node.imagePath}`)"
+                  style="width: 5rem; height: 5rem; border-radius: 10px;"
+
+              />
+              <span style="padding: 4px 0; font-weight: bold;">{{ node.name }}</span>
+
+
+            </div>
+
           </div>
         </template>
       </vue-tree>
@@ -305,9 +312,15 @@ export default class Calculator extends Vue {
   clickOnceOnNode(evt, node) {
     /*console.log(evt)
     console.log(node)*/
-    const root_name =this.$data.tier3.name
-
-    let previousStyle = evt.target.parentElement.attributes[1].value
+    const root_name = this.$data.tier3.name
+    const target_tag = evt.target.nodeName
+    let previousStyle
+    if (target_tag == "IMG" || target_tag == "SPAN") {
+      previousStyle = evt.target.parentElement.parentElement.attributes[0].value
+      evt.stopImmediatePropagation()
+    } else {
+      previousStyle = evt.target.parentElement.attributes[0].value
+    }
     let style = this.nodeStyle("white")
     if (previousStyle.includes("white")) {
       style = this.nodeStyle("green")
@@ -316,9 +329,9 @@ export default class Calculator extends Vue {
         return n.name === node.name
       })
       this.$data.selectedItems.splice(idx, 1)
-      if (node.name !== root_name) {
+      /*if (node.name !== root_name) {*/
         this.computePath()
-      }
+      // }
     }
     if (previousStyle.includes("green")) {
       const idx = this.$data.researchedItems.findIndex((n) => {
@@ -331,17 +344,21 @@ export default class Calculator extends Vue {
       this.$data.selectedItems.push(node)
       if (node.name !== root_name) {
         this.computePath()
-      }
-      else{
+      } else {
         this.$data.pathItems.push({
-          data:{
-            name:root_name,
-            cost:this.$data.tier3.cost
+          data: {
+            name: root_name,
+            cost: this.$data.tier3.cost
           }
         }) // In the case where it's only root
       }
     }
-    evt.target.parentElement.setAttribute("style", style)
+    if (target_tag == "IMG" || target_tag == "SPAN") {
+      evt.target.parentElement.parentElement.setAttribute("style", style)
+    } else {
+      evt.target.parentElement.setAttribute("style", style)
+    }
+
   }
 
 

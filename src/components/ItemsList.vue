@@ -44,7 +44,11 @@ export default {
           cost += item.data.cost
         }
         for (const item of this.researchedItems) {
-          if (item in this.pathItems) cost -= item.cost
+          if (this.pathItems.filter((item_in_path) => {
+            return item_in_path.data.name === item.name
+          }).length!==0) {
+            cost -= item.cost
+          }
         }
         cost = cost < 0 ? 0 : cost
         this.$emit("cost-change", cost)
@@ -52,6 +56,7 @@ export default {
       },
       set: function (newValue){
           console.log("setter")
+        return newValue
       }
     }
   },
