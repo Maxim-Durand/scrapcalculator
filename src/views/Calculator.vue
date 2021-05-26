@@ -3,6 +3,12 @@
     <h1>
       This is the first page of our scrap Calculator for Rust for easy tech tree scrap calculations!
     </h1>
+
+
+    <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
+                v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange">
+
+    </items-list>
     <div class="container">
       <vue-tree
           :dataset="tier3"
@@ -32,9 +38,10 @@
             <span style="padding: 4px 0; font-weight: bold;">{{ node.name }}</span>
           </div>
         </template>
-
       </vue-tree>
     </div>
+
+
   </div>
 
 
@@ -45,10 +52,12 @@
 import {Component, Vue} from 'vue-property-decorator';
 import VueTree from '@ssthouse/vue-tree-chart';
 import * as d3 from 'd3'
+import ItemsList from "@/components/ItemsList.vue";
 
 Vue.component('vue-tree', VueTree)
-
-@Component
+@Component({
+  components: {ItemsList}
+})
 export default class Calculator extends Vue {
 
   data() {
@@ -93,7 +102,7 @@ export default class Calculator extends Vue {
                         children: [
                           {
                             name: "Metal Facemask",
-                            cost:500,
+                            cost: 500,
                             imagePath: "metal.facemask.png",
                             customID: 6,
                           }
@@ -123,7 +132,7 @@ export default class Calculator extends Vue {
                                     children: [
                                       {
                                         name: "x8 Scope",
-                                        cost:125,
+                                        cost: 125,
                                         imagePath: "weapon.mod.small.scope.png"
                                       }
                                     ]
@@ -214,7 +223,15 @@ export default class Calculator extends Vue {
         nodeWidth: window.screen.width / 8, nodeHeight: 80, levelHeight: 200
       },
       totalCost: 0,
+      pathItems: [],
+      selectedItems: [],
+      researchedItems: [],
     }
+  }
+
+  onCostChange(evt) {
+    console.log(evt)
+    this.$data.totalCost = evt
   }
 
   nodeStyle(color) {
@@ -232,6 +249,9 @@ export default class Calculator extends Vue {
   }
 
   recursive_find(start_node, end_name) {
+    if (start_node.name === end_name) {
+      return start_node
+    }
     if (start_node.children) {
       const found_at_this_height = start_node.children.find(d => {
         return d.data.name === end_name
@@ -243,51 +263,83 @@ export default class Calculator extends Vue {
         for (const child of start_node.children) {
           // console.log(child)
           let found = this.recursive_find(child, end_name)
-          if(found){
+          if (found) {
             return found
           }
         }
       }
-    }
-    else{
+    } else {
       return undefined
     }
 
   }
 
-  computeCost(end_node) {
+  computePath() {
+
+    // Add a way to compute path with special links
+
     let tree = d3.hierarchy(this.$data.tier3)
     // console.log(tree)
     // console.log(end_node)
     let start_node = tree
-    let endNode = this.recursive_find(start_node, end_node.name)
-    // console.log(endNode)
-    let shortest_path = start_node.path(endNode)
-    // console.log(shortest_path)
-    let cost = 0
-    for(const node of shortest_path){
-      cost += node.data.cost
+    this.$data.pathItems = []
+    for (const item of this.$data.selectedItems) {
+      let endNode = this.recursive_find(start_node, item.name)
+      // console.log(endNode)
+      let shortest_path = start_node.path(endNode)
+      for (const node of shortest_path) {
+        // Check that this node isn't already in our path
+        const is_in_path = this.$data.pathItems.find((n) => {
+          return n.data.name === node.data.name
+        })
+        if (is_in_path === undefined) {
+          // It's not already in the pathItems
+          this.$data.pathItems.push(node)
+        }
+        // cost += node.data.cost
+      }
     }
-    return cost
+
   }
 
   clickOnceOnNode(evt, node) {
-    console.log(evt)
-    console.log(node)
-    const node_cost = node.cost
+    /*console.log(evt)
+    console.log(node)*/
+    const root_name =this.$data.tier3.name
+
     let previousStyle = evt.target.parentElement.attributes[1].value
     let style = this.nodeStyle("white")
     if (previousStyle.includes("white")) {
       style = this.nodeStyle("green")
-      this.$data.totalCost -= node_cost
+      this.$data.researchedItems.push(node)
+      const idx = this.$data.selectedItems.findIndex((n) => {
+        return n.name === node.name
+      })
+      this.$data.selectedItems.splice(idx, 1)
+      if (node.name !== root_name) {
+        this.computePath()
+      }
     }
     if (previousStyle.includes("green")) {
+      const idx = this.$data.researchedItems.findIndex((n) => {
+        return n.name === node.name
+      })
+      this.$data.researchedItems.splice(idx, 1)
       style = this.nodeStyle("transparent")
     }
     if (style.includes("white")) {
-      // TODO Build the tree search where cost is incremented at every children until you reach this node
-      this.$data.totalCost = this.computeCost(node)
-      console.log(this.$data.totalCost)
+      this.$data.selectedItems.push(node)
+      if (node.name !== root_name) {
+        this.computePath()
+      }
+      else{
+        this.$data.pathItems.push({
+          data:{
+            name:root_name,
+            cost:this.$data.tier3.cost
+          }
+        }) // In the case where it's only root
+      }
     }
     evt.target.parentElement.setAttribute("style", style)
   }
