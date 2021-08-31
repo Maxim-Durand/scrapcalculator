@@ -221,12 +221,12 @@ export default class Calculator extends Vue {
             imagePath: "valve3.png"
           },
         ],
-        links: [{parent: 1, child: 0}, {parent: 2, child: 0}, {parent: 3, child: 0}, {parent: 4, child: 0}, {
-          parent: 5,
-          child: 0
-        }, {parent: 6, child: 7}],
+        links: [{parent: 1, child: 0}, {parent: 2, child: 0}, {parent: 3, child: 0}, {parent: 4, child: 0},
+          {parent: 5, child: 0}, {parent: 6, child: 7}],
         identifier: "customID"
       },
+      tier1: {},
+      tier2: {},
       treeConfig: {
         nodeWidth: window.screen.width / 8, nodeHeight: 80, levelHeight: 200
       },
@@ -282,6 +282,37 @@ export default class Calculator extends Vue {
 
   }
 
+  shortestAndCheapestPath(currentNode,end) {
+    var start = currentNode,
+        ancestor = this.leastCommonAncestor(start, end),
+        nodes = [start];
+    while (start !== ancestor) {
+      start = start.parent;
+      nodes.push(start);
+    }
+    var k = nodes.length;
+    while (end !== ancestor) {
+      nodes.splice(k, 0, end);
+      end = end.parent;
+    }
+    return nodes;
+  }
+
+  leastCommonAncestor(a, b) {
+    if (a === b) return a;
+    var aNodes = a.ancestors(),
+        bNodes = b.ancestors(),
+        c = null;
+    a = aNodes.pop();
+    b = bNodes.pop();
+    while (a === b) {
+      c = a;
+      a = aNodes.pop();
+      b = bNodes.pop();
+    }
+    return c;
+  }
+
   computePath() {
 
     // Add a way to compute path with special links
@@ -294,7 +325,7 @@ export default class Calculator extends Vue {
     for (const item of this.$data.selectedItems) {
       let endNode = this.recursive_find(start_node, item.name)
       // console.log(endNode)
-      let shortest_path = start_node.path(endNode)
+      let shortest_path = this.shortestAndCheapestPath(start_node,endNode)
       for (const node of shortest_path) {
         // Check that this node isn't already in our path
         const is_in_path = this.$data.pathItems.find((n) => {
@@ -362,6 +393,35 @@ export default class Calculator extends Vue {
 
   }
 
+  findParentFromLink(d3_hierarchy,child_customID,child_name){
+    const t3 = this.$data.tier3
+    const links = t3["links"]
+    let parent_customID
+    for(const link of links){
+      if(link['child']===child_customID){
+        parent_customID = link['parent']
+      }
+    }
+    let bellow_root_nodes = d3_hierarchy.descendants()
+    for(const node of bellow_root_nodes){
+      if(node.data.customID){
+        if(node.data.customID === parent_customID){
+          return node
+        }
+      }
+    }
+    // TODO Améliorer le parcours de graphe pour montrer quel chemin suivre et surtout minimiser le coût
+    // L'idée c'est de regarder parmis les links, lesquels ont pour child le customID du node qui vient d'être seléctionné
+    // Ensuite on regarde le père et si il est parmi les 'researched'  ...
+    // On doit aussi regarder si le chemin jusqu'à ce père coûte moins cher que le chemin jusqu'au père choisit par shortest path et dans ce cas remplacer
+
+  }
+
+  mounted(){
+    console.log("MOUNTED & READY ")
+
+    return
+  }
 
 }
 </script>
