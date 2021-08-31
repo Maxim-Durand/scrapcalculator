@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>
-      This is the first page of our scrap Calculator for Rust for easy tech tree scrap calculations!
+      {{this.$data.selectedTier}}
     </h1>
 
 
@@ -70,6 +70,7 @@ export default class Calculator extends Vue {
   data() {
     return {
       d3,
+      selectedTier:3,
       tier3: {
         name: 'Reinforced Glass Window',
         cost: 125,
@@ -372,7 +373,8 @@ export default class Calculator extends Vue {
 }
 
 body {
-  background: url("../../src/assets/rust-background.png");
+  background: #5c5853;
+ /* background: url("../../src/assets/rust-background.png");*/
   background-repeat: revert;
 }
 
