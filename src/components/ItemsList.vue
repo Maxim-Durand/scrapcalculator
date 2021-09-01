@@ -28,6 +28,9 @@
 </template>
 
 <script>
+
+import shared from "@/shared";
+
 export default {
   name: "ItemsList",
   props: {
@@ -38,19 +41,8 @@ export default {
   computed: {
     totalCost: {
       get: function () {
-        let cost = 0
         console.log(this.pathItems)
-        for (const item of this.pathItems) {
-          cost += item.data.cost
-        }
-        for (const item of this.researchedItems) {
-          if (this.pathItems.filter((item_in_path) => {
-            return item_in_path.data.name === item.name
-          }).length !== 0) {
-            cost -= item.cost
-          }
-        }
-        cost = cost < 0 ? 0 : cost
+        const cost = shared.computeCost(this.pathItems,this.researchedItems)
         this.$emit("cost-change", cost)
         return cost
       },

@@ -1,9 +1,10 @@
 <template>
   <div>
     <h1>
-      {{this.$data.selectedTier}}
+      Tier : {{this.$data.selectedTier}}
     </h1>
 
+    <h3>Cost : {{this.$data.totalCost}}</h3>
 
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
                 v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange">
@@ -53,7 +54,6 @@
 
 
 </template>
-
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
@@ -282,8 +282,8 @@ export default class Calculator extends Vue {
 
   }
 
-  shortestAndCheapestPath(currentNode,end) {
-    var start = currentNode,
+  shortestAndCheapestPath(startNode,end) {
+    var start = startNode,
         ancestor = this.leastCommonAncestor(start, end),
         nodes = [start];
     while (start !== ancestor) {
@@ -292,8 +292,22 @@ export default class Calculator extends Vue {
     }
     var k = nodes.length;
     while (end !== ancestor) {
+      let chosen_parent = end.parent
       nodes.splice(k, 0, end);
-      end = end.parent;
+      if(end.data.customID!==undefined){
+        const other_parents = this.findParentsFromLink(startNode,end.data.customID)
+        for(const parent of other_parents){
+          if(parent.data.cost < chosen_parent.cost){
+            chosen_parent = parent
+          }
+          for (const item of this.$data.researchedItems) {
+            if(parent.data.name === item.name){
+              chosen_parent = parent
+            }
+          }
+        }
+      }
+      end = chosen_parent;
     }
     return nodes;
   }
@@ -325,7 +339,7 @@ export default class Calculator extends Vue {
     for (const item of this.$data.selectedItems) {
       let endNode = this.recursive_find(start_node, item.name)
       // console.log(endNode)
-      let shortest_path = this.shortestAndCheapestPath(start_node,endNode)
+      let shortest_path = this.shortestAndCheapestPath(start_node, endNode)
       for (const node of shortest_path) {
         // Check that this node isn't already in our path
         const is_in_path = this.$data.pathItems.find((n) => {
@@ -334,6 +348,11 @@ export default class Calculator extends Vue {
         if (is_in_path === undefined) {
           // It's not already in the pathItems
           this.$data.pathItems.push(node)
+          /*if (item.customID) {
+            console.log("has a customID then must be minimizedCost")
+            this.linksMinimizeCostFromNode(tree, item.customID, item)
+
+          }*/
         }
         // cost += node.data.cost
       }
@@ -393,33 +412,33 @@ export default class Calculator extends Vue {
 
   }
 
-  findParentFromLink(d3_hierarchy,child_customID,child_name){
+  findParentsFromLink(d3_hierarchy,child_customID:number){
     const t3 = this.$data.tier3
     const links = t3["links"]
-    let parent_customID
+    const parent_customID : number[] = []
     for(const link of links){
       if(link['child']===child_customID){
-        parent_customID = link['parent']
+        parent_customID.push(link['parent'])
       }
     }
     let bellow_root_nodes = d3_hierarchy.descendants()
+    const all_parents : any[] = []
     for(const node of bellow_root_nodes){
       if(node.data.customID){
-        if(node.data.customID === parent_customID){
-          return node
+        for(const id of parent_customID){
+          if(node.data.customID === id){
+            all_parents.push(node)
+          }
         }
+
       }
     }
-    // TODO Améliorer le parcours de graphe pour montrer quel chemin suivre et surtout minimiser le coût
-    // L'idée c'est de regarder parmis les links, lesquels ont pour child le customID du node qui vient d'être seléctionné
-    // Ensuite on regarde le père et si il est parmi les 'researched'  ...
-    // On doit aussi regarder si le chemin jusqu'à ce père coûte moins cher que le chemin jusqu'au père choisit par shortest path et dans ce cas remplacer
+    return all_parents
 
   }
 
-  mounted(){
-    console.log("MOUNTED & READY ")
 
+  mounted(){
     return
   }
 
