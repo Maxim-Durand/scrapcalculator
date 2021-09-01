@@ -1,10 +1,10 @@
 <template>
   <div>
     <h1>
-      Tier : {{this.$data.selectedTier}}
+      Tier : {{ this.$data.selectedTier }}
     </h1>
 
-    <h3>Cost : {{this.$data.totalCost}}</h3>
+    <h3>Cost : {{ this.$data.totalCost }}</h3>
 
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
                 v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange">
@@ -60,6 +60,7 @@ import {Component, Vue} from 'vue-property-decorator';
 import VueTree from '@ssthouse/vue-tree-chart';
 import * as d3 from 'd3'
 import ItemsList from "@/components/ItemsList.vue";
+import shared from "@/shared";
 
 Vue.component('vue-tree', VueTree)
 @Component({
@@ -70,7 +71,7 @@ export default class Calculator extends Vue {
   data() {
     return {
       d3,
-      selectedTier:3,
+      selectedTier: 3,
       tier3: {
         name: 'Reinforced Glass Window',
         cost: 125,
@@ -257,7 +258,7 @@ export default class Calculator extends Vue {
   }
 
   recursive_find(start_node, end_name) {
-    if (start_node.name === end_name) {
+    if (start_node.data.name === end_name) {
       return start_node
     }
     if (start_node.children) {
@@ -282,7 +283,7 @@ export default class Calculator extends Vue {
 
   }
 
-  shortestAndCheapestPath(startNode,end) {
+  shortestAndCheapestPath(startNode, end) {
     var start = startNode,
         ancestor = this.leastCommonAncestor(start, end),
         nodes = [start];
@@ -294,16 +295,19 @@ export default class Calculator extends Vue {
     while (end !== ancestor) {
       let chosen_parent = end.parent
       nodes.splice(k, 0, end);
-      if(end.data.customID!==undefined){
-        const other_parents = this.findParentsFromLink(startNode,end.data.customID)
-        for(const parent of other_parents){
-          if(parent.data.cost < chosen_parent.cost){
+      console.log(end)
+      if (end.data.customID !== undefined) {
+        const other_parents = this.findParentsFromLink(startNode, end.data.customID)
+        for (const parent of other_parents) {
+          // Find the leastCommonAncestor and compute path between LCA and other parents
+          // Then compare the cost of those other path to the cost of the default path
+          const lca = this.leastCommonAncestor(end.parent, parent)
+          const new_path = this.shortestAndCheapestPath(lca, parent)
+          const old_path = this.shortestAndCheapestPath(lca, end.parent)
+          const new_cost = shared.computeCost(new_path, this.$data.researchedItems)
+          const old_cost = shared.computeCost(old_path, this.$data.researchedItems)
+          if (new_cost < old_cost) {
             chosen_parent = parent
-          }
-          for (const item of this.$data.researchedItems) {
-            if(parent.data.name === item.name){
-              chosen_parent = parent
-            }
           }
         }
       }
@@ -338,12 +342,11 @@ export default class Calculator extends Vue {
     this.$data.pathItems = []
     for (const item of this.$data.selectedItems) {
       let endNode = this.recursive_find(start_node, item.name)
-      // console.log(endNode)
       let shortest_path = this.shortestAndCheapestPath(start_node, endNode)
       for (const node of shortest_path) {
         // Check that this node isn't already in our path
         const is_in_path = this.$data.pathItems.find((n) => {
-          return n.data.name === node.data.name
+          return n.data.name == node.data.name
         })
         if (is_in_path === undefined) {
           // It's not already in the pathItems
@@ -381,7 +384,7 @@ export default class Calculator extends Vue {
       })
       this.$data.selectedItems.splice(idx, 1)
       /*if (node.name !== root_name) {*/
-        this.computePath()
+      this.computePath()
       // }
     }
     if (previousStyle.includes("green")) {
@@ -393,15 +396,17 @@ export default class Calculator extends Vue {
     }
     if (style.includes("white")) {
       this.$data.selectedItems.push(node)
-      if (node.name !== root_name) {
+      if (node.name != root_name) {
         this.computePath()
       } else {
-        this.$data.pathItems.push({
-          data: {
-            name: root_name,
-            cost: this.$data.tier3.cost
-          }
-        }) // In the case where it's only root
+        if (this.$data.selectedItems.length === 1) {
+          this.$data.pathItems.push({
+            data: {
+              name: root_name,
+              cost: this.$data.tier3.cost
+            }
+          }) // In the case where it's only root
+        }
       }
     }
     if (target_tag == "IMG" || target_tag == "SPAN") {
@@ -412,21 +417,21 @@ export default class Calculator extends Vue {
 
   }
 
-  findParentsFromLink(d3_hierarchy,child_customID:number){
+  findParentsFromLink(d3_hierarchy, child_customID: number) {
     const t3 = this.$data.tier3
     const links = t3["links"]
-    const parent_customID : number[] = []
-    for(const link of links){
-      if(link['child']===child_customID){
+    const parent_customID: number[] = []
+    for (const link of links) {
+      if (link['child'] === child_customID) {
         parent_customID.push(link['parent'])
       }
     }
     let bellow_root_nodes = d3_hierarchy.descendants()
-    const all_parents : any[] = []
-    for(const node of bellow_root_nodes){
-      if(node.data.customID){
-        for(const id of parent_customID){
-          if(node.data.customID === id){
+    const all_parents: any[] = []
+    for (const node of bellow_root_nodes) {
+      if (node.data.customID) {
+        for (const id of parent_customID) {
+          if (node.data.customID === id) {
             all_parents.push(node)
           }
         }
@@ -438,7 +443,7 @@ export default class Calculator extends Vue {
   }
 
 
-  mounted(){
+  mounted() {
     return
   }
 
@@ -453,7 +458,7 @@ export default class Calculator extends Vue {
 
 body {
   background: #5c5853;
- /* background: url("../../src/assets/rust-background.png");*/
+  /* background: url("../../src/assets/rust-background.png");*/
   background-repeat: revert;
 }
 
