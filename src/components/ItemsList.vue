@@ -2,27 +2,28 @@
   <div>
     <div class="container px-5">
       <div class="row">
-        <div class="col">
-          <div class="card-header" style="text-align: center"><h3>Selected Items</h3></div>
-          <div class="list-group">
-            <div v-for="item in this.selectedItems" :key="item.name">
-              <label class="list-group-items">{{ item.name }}</label>
-            </div>
-          </div>
+        <div class="col-sm" id="selectedItems" @drop="onDrop($event)" @dragenter.prevent @dragover.prevent>
+          <!--          <div class="card-header" style="text-align: center"><h3>Selected Items</h3></div>-->
+          <h3>Selected Items</h3>
+          <ul>
+            <li draggable="true" @dragstart="startDrag($event,item,1)" class="drag-el" v-for="item in this.selectedItems" :key="item.name">
+              {{ item.name }} | {{item.cost}} scraps
+            </li>
+          </ul>
         </div>
-        <div class="col-sm">
+        <div class="col-sm" id="researchedItems" @drop="onDrop($event)" @dragenter.prevent @dragover.prevent>
           <h3>Researched items</h3>
           <ul>
-            <li v-for="item in researchedItems" :key="item.name">
-              {{ item.name }}
+            <li draggable="true" @dragstart="startDrag($event,item,2)" class="drag-el" v-for="item in researchedItems" :key="item.name">
+              {{ item.name }} | {{item.cost}} scraps
             </li>
           </ul>
         </div>
       </div>
     </div>
 
-    <h3>Total cost</h3>
-    <h4>{{ this.totalCost }}</h4>
+    <h2>Total cost</h2>
+    <h2>{{ this.totalCost }}</h2>
   </div>
 
 </template>
@@ -42,7 +43,7 @@ export default {
     totalCost: {
       get: function () {
         console.log(this.pathItems)
-        const cost = shared.computeCost(this.pathItems,this.researchedItems)
+        const cost = shared.computeCost(this.pathItems, this.researchedItems)
         this.$emit("cost-change", cost)
         return cost
       },
@@ -52,9 +53,47 @@ export default {
       }
     }
   },
+  methods:{
+    startDrag(event,item,from_list){
+      event.dataTransfer.dropEffect="move"
+      event.dataTransfer.effectAllowed="move"
+      const item_str = JSON.stringify(item)
+      event.dataTransfer.setData("item", item_str)
+      event.dataTransfer.setData("from_list",from_list)
+    },
+    onDrop(event){
+      const item_str = event.dataTransfer.getData("item")
+      const item = JSON.parse(item_str)
+      const from_list = event.dataTransfer.getData("from_list")
+      if(from_list == 1){
+        const item_index = this.selectedItems.findIndex((elem)=>{return elem.name === item.name})
+        this.selectedItems.splice(item_index,1)
+        this.researchedItems.push(item)
+        this.$emit("fromSelectedToResearched",item_str)
+      }
+      else{
+        const item_index = this.researchedItems.findIndex((elem)=>{return elem.name === item.name})
+        this.researchedItems.splice(item_index,1)
+        this.selectedItems.push(item)
+        this.$emit("fromResearchedToSelected",item_str)
+      }
+    }
+  }
 }
 </script>
 
 <style scoped>
+.col-sm{
 
+  width: 50%;
+  margin: 50px auto;
+  padding: 10px;
+  min-height: 10px;
+}
+.drag-el{
+  background-color: #373631;
+  color: white;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+}
 </style>

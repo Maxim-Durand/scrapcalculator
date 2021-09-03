@@ -4,10 +4,10 @@
       Tier : {{ this.$data.selectedTier }}
     </h1>
 
-    <h3>Cost : {{ this.$data.totalCost }}</h3>
-
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
-                v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange">
+                v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange"
+                v-on:fromSelectedToResearched="fromSelectedtoResearched" v-on:fromResearchedToSelected="fromReasearchedtoSelected"
+    >
 
     </items-list>
     <div class="container">
@@ -34,6 +34,7 @@
               border-bottom-width: var(--border-size);
               border-bottom-style: solid;"
             >
+
               <img
                   :src="require(`../assets/tier3/${node.imagePath}`)"
                   style="width: 5rem; height: 5rem; border-radius: 10px;"
@@ -71,7 +72,7 @@ export default class Calculator extends Vue {
   data() {
     return {
       d3,
-      selectedTier: 3,
+      selectedTier: "tier3",
       tier3: {
         name: 'Reinforced Glass Window',
         cost: 125,
@@ -335,7 +336,7 @@ export default class Calculator extends Vue {
 
     // Add a way to compute path with special links
 
-    let tree = d3.hierarchy(this.$data.tier3)
+    let tree = d3.hierarchy(this.$data[this.$data.selectedTier])
     // console.log(tree)
     // console.log(end_node)
     let start_node = tree
@@ -364,9 +365,8 @@ export default class Calculator extends Vue {
   }
 
   clickOnceOnNode(evt, node) {
-    /*console.log(evt)
-    console.log(node)*/
-    const root_name = this.$data.tier3.name
+    const root_name = this.$data[this.$data.selectedTier]
+    console.log('rootname is',root_name)
     const target_tag = evt.target.nodeName
     let previousStyle
     if (target_tag == "IMG" || target_tag == "SPAN") {
@@ -417,9 +417,24 @@ export default class Calculator extends Vue {
 
   }
 
+  fromSelectedtoResearched(item_str){
+    const item = JSON.parse(item_str)
+    const tree = d3.hierarchy(this.$data[this.$data.selectedTier])
+
+  }
+  fromReasearchedtoSelected(item_str){
+    const item = JSON.parse(item_str)
+    const tree = d3.hierarchy(this.$data[this.$data.selectedTier])
+    const item_node = tree.descendants().find((node) => {
+      return node.data.name == item.name
+    })
+    console.log(item_node)
+    // TODO trouver un moyen de changer la couleur des nodes même lors du drag & drop
+  }
+
   findParentsFromLink(d3_hierarchy, child_customID: number) {
-    const t3 = this.$data.tier3
-    const links = t3["links"]
+    const tier = this.$data[this.$data.selectedTier]
+    const links = tier["links"]
     const parent_customID: number[] = []
     for (const link of links) {
       if (link['child'] === child_customID) {
@@ -467,9 +482,8 @@ body {
 }
 
 .container {
-  display: flex;
+  display: contents;
   flex-direction: column;
-  align-items: center;
 }
 
 .rich-media-node {
