@@ -8,6 +8,7 @@
                 v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange"
                 v-on:fromSelectedToResearched="fromSelectedtoResearched"
                 v-on:fromResearchedToSelected="fromReasearchedtoSelected"
+                v-on:deletedItemFromLists="onDeleteItemFromLists"
     >
 
     </items-list>
@@ -478,6 +479,12 @@ export default class Calculator extends Vue {
 
   }
 
+  onDeleteItemFromLists(item_str:string){
+    const item = JSON.parse(item_str)
+    const node = this.findD3Node(item['name'])
+    node['parentElement'].setAttribute("style",this.getNodeStyle("transparent"))
+    this.computePath()
+  }
 
   mounted() {
     return
