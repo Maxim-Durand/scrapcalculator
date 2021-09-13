@@ -6,7 +6,8 @@
 
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
                 v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange"
-                v-on:fromSelectedToResearched="fromSelectedtoResearched" v-on:fromResearchedToSelected="fromReasearchedtoSelected"
+                v-on:fromSelectedToResearched="fromSelectedtoResearched"
+                v-on:fromResearchedToSelected="fromReasearchedtoSelected"
     >
 
     </items-list>
@@ -244,7 +245,7 @@ export default class Calculator extends Vue {
     this.$data.totalCost = evt
   }
 
-  nodeStyle(color) {
+  getNodeStyle(color) {
     return "font-size: 14px;\n" +
         "border: " + color + ";" +
         "              font-style: normal;\n" +
@@ -296,7 +297,6 @@ export default class Calculator extends Vue {
     while (end !== ancestor) {
       let chosen_parent = end.parent
       nodes.splice(k, 0, end);
-      console.log(end)
       if (end.data.customID !== undefined) {
         const other_parents = this.findParentsFromLink(startNode, end.data.customID)
         for (const parent of other_parents) {
@@ -366,7 +366,6 @@ export default class Calculator extends Vue {
 
   clickOnceOnNode(evt, node) {
     const root_name = this.$data[this.$data.selectedTier]
-    console.log('rootname is',root_name)
     const target_tag = evt.target.nodeName
     let previousStyle
     if (target_tag == "IMG" || target_tag == "SPAN") {
@@ -375,9 +374,9 @@ export default class Calculator extends Vue {
     } else {
       previousStyle = evt.target.parentElement.attributes[0].value
     }
-    let style = this.nodeStyle("white")
+    let style = this.getNodeStyle("white")
     if (previousStyle.includes("white")) {
-      style = this.nodeStyle("green")
+      style = this.getNodeStyle("green")
       this.$data.researchedItems.push(node)
       const idx = this.$data.selectedItems.findIndex((n) => {
         return n.name === node.name
@@ -392,7 +391,7 @@ export default class Calculator extends Vue {
         return n.name === node.name
       })
       this.$data.researchedItems.splice(idx, 1)
-      style = this.nodeStyle("transparent")
+      style = this.getNodeStyle("transparent")
     }
     if (style.includes("white")) {
       this.$data.selectedItems.push(node)
@@ -417,20 +416,42 @@ export default class Calculator extends Vue {
 
   }
 
-  fromSelectedtoResearched(item_str){
-    const item = JSON.parse(item_str)
-    const tree = d3.hierarchy(this.$data[this.$data.selectedTier])
+  findD3Node(item_name) {
+    const all_nodes = d3.selectAll(".rich-media-node")
+    let item
+    for (const node of all_nodes.nodes()) {
+      if (node) {
+        const span_value = node["childNodes"][1]["innerText"]
+        if (span_value === item_name) {
+          item = node
+        }
+      }
+    }
+    return item
 
+    /*.select(function () {
+  const span = this.childNodes[1]
+  if(span == item_name){
+    return this
   }
-  fromReasearchedtoSelected(item_str){
+})*/
+  }
+
+  fromSelectedtoResearched(item_str:string) {
     const item = JSON.parse(item_str)
-    const tree = d3.hierarchy(this.$data[this.$data.selectedTier])
-    const item_node = tree.descendants().find((node) => {
-      return node.data.name == item.name
-    })
-    console.log(item_node)
-    // TODO trouver un moyen de changer la couleur des nodes même lors du drag & drop
+    const node = this.findD3Node(item['name'])
+    node['parentElement'].setAttribute("style",this.getNodeStyle("green"))
+    this.computePath()
   }
+
+  fromReasearchedtoSelected(item_str:string) {
+    const item = JSON.parse(item_str)
+    const node = this.findD3Node(item['name'])
+    node['parentElement'].setAttribute("style",this.getNodeStyle("white"))
+    this.computePath()
+  }
+
+
 
   findParentsFromLink(d3_hierarchy, child_customID: number) {
     const tier = this.$data[this.$data.selectedTier]
