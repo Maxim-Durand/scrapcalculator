@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>
-      Tier : {{ this.$data.selectedTier }}
+      Tier : {{ this.selectedTier }}
     </h1>
 
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
@@ -14,7 +14,7 @@
     </items-list>
     <div class="container">
       <vue-tree
-          :dataset="tier3"
+          :dataset=this.$data[this.selectedTier]
           :config="treeConfig"
           link-style='straight'
           :collapse-enabled="false"
@@ -74,7 +74,6 @@ export default class Calculator extends Vue {
   data() {
     return {
       d3,
-      selectedTier: "tier3",
       tier3: {
         name: 'Reinforced Glass Window',
         cost: 125,
@@ -241,6 +240,10 @@ export default class Calculator extends Vue {
     }
   }
 
+  get selectedTier(){
+    return this.$store.state.tierSelected
+  }
+
   onCostChange(evt) {
     console.log(evt)
     this.$data.totalCost = evt
@@ -337,7 +340,7 @@ export default class Calculator extends Vue {
 
     // Add a way to compute path with special links
 
-    let tree = d3.hierarchy(this.$data[this.$data.selectedTier])
+    let tree = d3.hierarchy(this.$data[this.selectedTier])
     // console.log(tree)
     // console.log(end_node)
     let start_node = tree
@@ -366,7 +369,7 @@ export default class Calculator extends Vue {
   }
 
   clickOnceOnNode(evt, node) {
-    const root_name = this.$data[this.$data.selectedTier]
+    const root_name = this.$data[this.selectedTier]
     const target_tag = evt.target.nodeName
     let previousStyle
     if (target_tag == "IMG" || target_tag == "SPAN") {
@@ -455,7 +458,7 @@ export default class Calculator extends Vue {
 
 
   findParentsFromLink(d3_hierarchy, child_customID: number) {
-    const tier = this.$data[this.$data.selectedTier]
+    const tier = this.$data[this.selectedTier]
     const links = tier["links"]
     const parent_customID: number[] = []
     for (const link of links) {
