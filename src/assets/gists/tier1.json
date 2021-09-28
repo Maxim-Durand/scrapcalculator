@@ -1,0 +1,56 @@
+[{
+  "name": "Salvaged Hammer",
+  "imagePath": "",
+  "cost": 75,
+  "children": [
+    {
+      "name": "Paddle",
+      "imagePath": "",
+      "cost": 20,
+      "children": [
+        {
+          "name": "Kayak",
+          "imagePath": "",
+          "cost": 20
+        }
+      ]
+    },
+    {
+      "name": "Metal Axe",
+      "imagePath": "",
+      "cost": 75
+    },
+    {
+      "name": "Metal Pickaxe",
+      "imagePath": "",
+      "cost": 75
+    }
+  ]
+},
+  {
+    "name": "Tank Top",
+    "cost": 20,
+    "imagePath": "",
+    "children": [
+      {
+        "name": "Green T-shirt",
+        "imagePath": "",
+        "cost": 20
+      },
+      {
+        "name": "Beanie",
+        "imagePath": "",
+        "cost": 20
+      }
+    ]
+  },
+  {
+    "name": "Water Bucket",
+    "cost": 20
+  },
+  {
+    "name": "Switch",
+    "imagePath": "",
+    "cost": 20
+  }
+]

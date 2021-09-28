@@ -1,8 +1,16 @@
 <template>
   <div>
-    <h1>
-      Tier : {{ this.selectedTier }}
-    </h1>
+    <div class="select-container">
+
+      <v-select
+          @input="changeTier"
+          class="v-select"
+
+          :options="this.$data.tierArray"
+          :value="$store.state.tierSelected"
+      ></v-select>
+    </div>
+
 
     <items-list v-bind:selected-items="this.$data.selectedItems" v-bind:researched-items="this.$data.researchedItems"
                 v-bind:path-items="this.$data.pathItems" v-on:cost-change="onCostChange"
@@ -60,10 +68,15 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css';
 import VueTree from '@ssthouse/vue-tree-chart';
 import * as d3 from 'd3'
 import ItemsList from "@/components/ItemsList.vue";
 import shared from "@/shared";
+import tier3_data from '@/assets/gists/tier3.json'
+import tier1_data from '@/assets/gists/tier1.json'
+Vue.component('v-select', vSelect)
 
 Vue.component('vue-tree', VueTree)
 @Component({
@@ -74,161 +87,9 @@ export default class Calculator extends Vue {
   data() {
     return {
       d3,
-      tier3: {
-        name: 'Reinforced Glass Window',
-        cost: 125,
-        imagePath: 'wall-window-bars-toptier.png',
-        children: [
-          {
-            name: 'Armored Door',
-            cost: 500,
-            imagePath: 'door.hinged.toptier.png',
-            children: [
-              {
-                name: 'Armored Double Door',
-                cost: 500,
-                imagePath: 'door.double.hinged.toptier.png',
-              }
-            ]
-          },
-          {
-            name: 'MP5A4',
-            cost: 125,
-            imagePath: "smg.mp5.png",
-            children: [
-              {
-                name: "Weapon Lasersight",
-                imagePath: "weapon.mod.lasersight.png",
-                cost: 125,
-                children: [
-                  {
-                    name: "HV 5.56 Rifle Ammo",
-                    imagePath: "ammo.rifle.hv.png",
-                    cost: 125,
-                    children: [
-                      {
-                        name: "Explosive 5.56 Rifle Ammo",
-                        imagePath: "ammo.rifle.explosive.png",
-                        cost: 125,
-                        children: [
-                          {
-                            name: "Metal Facemask",
-                            cost: 500,
-                            imagePath: "metal.facemask.png",
-                            customID: 6,
-                          }
-                        ]
-                      },
-                      {
-                        name: "Incendiary 5.56 Rifle Ammo",
-                        imagePath: "ammo.rifle.incendiary.png",
-                        cost: 125,
-                        children: [
-
-                          {
-                            name: "Metal Chest Plate",
-                            imagePath: "metal.plate.torso.png",
-                            cost: 500,
-                            children: [
-                              {
-                                name: "Assault Rifle",
-                                imagePath: "rifle.ak.png",
-                                cost: 500,
-                                customID: 7,
-                                children: [
-                                  {
-                                    name: "Bolt Action Rifle",
-                                    imagePath: "rifle.bolt.png",
-                                    cost: 500,
-                                    children: [
-                                      {
-                                        name: "x8 Scope",
-                                        cost: 125,
-                                        imagePath: "weapon.mod.small.scope.png"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            name: "Explosives",
-                            imagePath: "explosives.png",
-                            cost: 500,
-                            children: [
-                              {
-                                name: "Timed Explosives",
-                                imagePath: "explosive.timed.png",
-                                cost: 500,
-                                children: [
-                                  {
-                                    name: "Rocket",
-                                    imagePath: "ammo.rocket.basic.png",
-                                    cost: 125
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                        ]
-                      },
-
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            name: "High Quality Carburetor",
-            cost: 20,
-            customID: 3,
-            imagePath: "carburetor3.png"
-          },
-          {
-            name: "Crankshaft",
-            cost: 20,
-            customID: 1,
-            imagePath: "crankshaft3.png",
-          },
-          {
-            name: "High quality pistons",
-            imagePath: "piston3.png",
-            cost: 20,
-            customID: 4
-          },
-          {
-            name: "High Quality Spark Plugs",
-            imagePath: "sparkplug3.png",
-            cost: 20,
-            children: [
-              {
-                name: "Armored Cockpit Vehicule Module",
-                cost: 125,
-                customID: 0,
-                imagePath: "vehicle.1mod.cockpit.armored.png"
-              },
-              {
-                name: "Armored Passenger Vehicule Module",
-                cost: 125,
-                customID: 0,
-                imagePath: "vehicle.1mod.passengers.armored.png"
-              }
-            ]
-          },
-          {
-            name: "Valve",
-            cost: 20,
-            customID: 5,
-            imagePath: "valve3.png"
-          },
-        ],
-        links: [{parent: 1, child: 0}, {parent: 2, child: 0}, {parent: 3, child: 0}, {parent: 4, child: 0},
-          {parent: 5, child: 0}, {parent: 6, child: 7}],
-        identifier: "customID"
-      },
-      tier1: {},
+      tierArray: ["tier1", "tier2", "tier3"],
+      tier3: tier3_data,
+      tier1: tier1_data,
       tier2: {},
       treeConfig: {
         nodeWidth: window.screen.width / 8, nodeHeight: 80, levelHeight: 200
@@ -240,12 +101,16 @@ export default class Calculator extends Vue {
     }
   }
 
-  get selectedTier(){
+  get selectedTier() {
     return this.$store.state.tierSelected
   }
 
+  changeTier(value) {
+    this.$store.commit('changeTier', value)
+  }
+
   onCostChange(evt) {
-    console.log(evt)
+    //console.log(evt)
     this.$data.totalCost = evt
   }
 
@@ -286,8 +151,22 @@ export default class Calculator extends Vue {
     } else {
       return undefined
     }
-
   }
+
+  /*
+  changeTier(evt,tier){
+    let chosen_tier = "tier1"
+    switch (tier){
+      case 2:
+        chosen_tier="tier2"
+            break
+      case 3:
+        chosen_tier="tier3"
+            break
+    }
+    this.$store.commit("changeTier",chosen_tier)
+  }*/
+
 
   shortestAndCheapestPath(startNode, end) {
     var start = startNode,
@@ -441,20 +320,19 @@ export default class Calculator extends Vue {
 })*/
   }
 
-  fromSelectedtoResearched(item_str:string) {
+  fromSelectedtoResearched(item_str: string) {
     const item = JSON.parse(item_str)
     const node = this.findD3Node(item['name'])
-    node['parentElement'].setAttribute("style",this.getNodeStyle("green"))
+    node['parentElement'].setAttribute("style", this.getNodeStyle("green"))
     this.computePath()
   }
 
-  fromReasearchedtoSelected(item_str:string) {
+  fromReasearchedtoSelected(item_str: string) {
     const item = JSON.parse(item_str)
     const node = this.findD3Node(item['name'])
-    node['parentElement'].setAttribute("style",this.getNodeStyle("white"))
+    node['parentElement'].setAttribute("style", this.getNodeStyle("white"))
     this.computePath()
   }
-
 
 
   findParentsFromLink(d3_hierarchy, child_customID: number) {
@@ -482,10 +360,10 @@ export default class Calculator extends Vue {
 
   }
 
-  onDeleteItemFromLists(item_str:string){
+  onDeleteItemFromLists(item_str: string) {
     const item = JSON.parse(item_str)
     const node = this.findD3Node(item['name'])
-    node['parentElement'].setAttribute("style",this.getNodeStyle("transparent"))
+    node['parentElement'].setAttribute("style", this.getNodeStyle("transparent"))
     this.computePath()
   }
 
@@ -529,4 +407,24 @@ body {
   border: var(--border-color);
   /*border-radius: 4px;*/
 }
+
+.v-select .vs__search::placeholder,
+.v-select .vs__dropdown-toggle,
+.v-select .vs__dropdown-menu {
+  background: #dfe5fb;
+  border: none;
+  color: #394066;
+  text-transform: lowercase;
+  font-variant: small-caps;
+}
+
+.v-select .vs__clear,
+.v-select .vs__open-indicator {
+  fill: #394066;
+}
+
+.select-container{
+  display: inline-flex;
+}
+
 </style>

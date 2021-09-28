@@ -1,8 +1,0 @@
-{
-  "tier3": {
-    "name": "Reinforced Glass Window",
-    "cost": 1,
-    "imagePath": "wall-window-bars-toptier.png",
-    "children": []
-  }
-}
